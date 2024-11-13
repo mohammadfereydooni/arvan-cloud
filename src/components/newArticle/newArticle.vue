@@ -97,7 +97,6 @@ export default {
         };
 
         console.log(payload)
-        console.log('adwawda', selectedTags.value)
 
         try {
           const response = await addArticle(payload);
