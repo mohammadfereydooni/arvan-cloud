@@ -47,9 +47,15 @@ export default {
     async deleteArticle() {
       try {
         await deleteArticle(this.articleSlug);
-        window.location.reload();
-      }catch (error) {
-        notificationService.error("Something went wrong!");
+        this.showModal = false;
+        notificationService.success("Delete article successfully");
+
+        setTimeout(() =>{
+          window.location.reload();
+        },3000)
+      }catch (result) {
+          notificationService.error(result.response.data.message);
+
       }
     },
     openModal() {
