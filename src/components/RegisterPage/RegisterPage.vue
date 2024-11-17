@@ -44,7 +44,7 @@
         <button type="submit" class="btn btn-primary w-100 mt-3">Register</button>
       </form>
       <div class="text-center mt-3">
-        <router-link to="/" class="fw-bold">Register Now</router-link>
+        <router-link to="/" class="fw-bold">login</router-link>
       </div>
     </div>
   </div>
@@ -55,6 +55,7 @@
 import useVuelidate from '@vuelidate/core';
 import { required, email } from '@vuelidate/validators';
 import { registerUser } from '@/services/apiService';
+import notificationService from "@/services/notificationService";
 
 export default {
   name: 'RegisterPage',
@@ -100,8 +101,15 @@ export default {
 
 
         this.$router.push('/home');
-      } catch (error) {
-        console.error("خطا در ثبت‌نام:", error);
+      } catch (result) {
+        if (result.response.data.errors) {
+          const serverErrors = result.response.data.errors;
+          for (const key in serverErrors) {
+            notificationService.error(serverErrors[key])
+          }
+        }else {
+          notificationService.error(result.response.data.errors);
+        }
       }
     }
   },

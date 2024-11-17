@@ -14,7 +14,13 @@
       <Column header="Created At" style="width: 20%">
         <template #body="slotProps">
           {{ formatDate(slotProps.data.createdAt) }}
-          <drop-downs/>
+
+        </template>
+      </Column>
+
+      <Column header="Actions" style="width: 10%">
+        <template #body="slotProps">
+          <drop-downs :articleSlug="slotProps.data.slug"/>
         </template>
       </Column>
 
@@ -28,6 +34,7 @@ import { getArticles } from "@/services/apiService"
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import DropDowns from "@/layouts/dropDowns.vue";
+import notificationService from "@/services/notificationService";
 
 export default {
   components: {
@@ -47,9 +54,8 @@ export default {
     async fetchArticles() {
       try {
         this.articles = await getArticles();
-        console.log(this.articles)
       } catch (error) {
-        console.error("Error fetching articles in component:", error);
+        notificationService.error(error);
       }
     },
     formatDate(dateString) {
@@ -60,57 +66,3 @@ export default {
   },
 };
 </script>
-<!--<template>-->
-
-<!--  <table class="table">-->
-<!--    <thead class="thead-light">-->
-<!--    <tr>-->
-<!--      <th scope="col">#</th>-->
-<!--      <th scope="col">title</th>-->
-<!--      <th scope="col">Author</th>-->
-<!--      <th scope="col">Tags</th>-->
-<!--      <th scope="col">excerpt</th>-->
-<!--      <th scope="col">created</th>-->
-<!--    </tr>-->
-<!--    </thead>-->
-<!--    <tbody>-->
-<!--    <tr v-for="(article, index) in articles" :key="article.slug">-->
-<!--      <th scope="row">{{ index + 1 }}</th>-->
-<!--      <td>{{ article.title }}</td>-->
-<!--      <td>{{ article.author.username }}</td>-->
-<!--      <td>{{ article.tagList.join(', ') }}</td>-->
-<!--      <td>{{ article.body.substring(0, 100) }}...</td>-->
-<!--      <td>{{ new Date(article.createdAt).toLocaleDateString() }} <drop-downs/></td>-->
-<!--    </tr>-->
-<!--    </tbody>-->
-<!--  </table>-->
-<!--</template>-->
-<!--<script>-->
-<!--import { getArticles } from "@/services/apiService"-->
-<!--import DropDowns from "@/layouts/dropDowns.vue";-->
-
-
-<!--export default {-->
-<!--  components:{-->
-<!--    DropDowns-->
-<!--  },-->
-<!--  data(){-->
-<!--    return{-->
-<!--      articles: []-->
-<!--    };-->
-<!--  },-->
-<!--  created() {-->
-<!--    this.fetchArticles();-->
-<!--  },-->
-<!--  methods: {-->
-<!--    async fetchArticles() {-->
-<!--      try {-->
-<!--        this.articles = await getArticles();-->
-<!--        console.log(this.articles)-->
-<!--      } catch (error) {-->
-<!--        console.error("Error fetching articles in component:", error);-->
-<!--      }-->
-<!--    },-->
-<!--  },-->
-<!--}-->
-<!--</script>-->

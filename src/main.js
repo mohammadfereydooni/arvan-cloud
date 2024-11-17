@@ -11,10 +11,11 @@ import Vue3Toastify from 'vue3-toastify';
 import PrimeVue from 'primevue/config';
 import Aura from '@primevue/themes/aura';
 
+
 const app = createApp(App);
 app.use(router);
 app.use(PrimeVue, {
-    // Default theme configuration
+
     theme: {
         preset: Aura,
         options: {

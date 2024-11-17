@@ -24,9 +24,12 @@
               :class="{'is-invalid': passwordError}"
               required
           />
-          <div v-if="passwordError" class="text-danger mt-1">Required field</div>
         </div>
         <button type="submit" class="btn btn-primary w-100 mt-3">Login</button>
+
+        <div v-if="errors" class="invalid-feedback">
+          {{ errors }}
+        </div>
       </form>
       <div class="text-center mt-3">
         <router-link to="/register" class="fw-bold">Register Now</router-link>
@@ -38,6 +41,7 @@
 <script>
 
 import { loginUser } from '@/services/apiService';
+import notificationService from "@/services/notificationService";
 
 export default {
   data() {
@@ -46,16 +50,17 @@ export default {
       password: '',
       emailError: false,
       passwordError: false,
+      errors: {},
     };
   },
   methods: {
     async handleLogin() {
-      // بررسی خطاها
+
       this.emailError = !this.email;
       this.passwordError = !this.password;
+      this.errors = {};
 
       if (this.emailError || this.passwordError) {
-        console.log("Form is invalid");
         return;
       }
 
@@ -68,15 +73,19 @@ export default {
 
       try {
         const result = await loginUser(loginData);
-        const token = result.user.token;
+        const token = result.user;
 
-        // ذخیره توکن در Local Storage
-        localStorage.setItem('authToken', token);
+        localStorage.setItem('authToken', token.token);
+        localStorage.setItem('username', token.username);
 
-        // هدایت به صفحه اصلی
+
         this.$router.push('/home');
-      } catch (error) {
-        console.error("Login failed:", error);
+      } catch (result) {
+        if (result.response.data.errors) {
+          notificationService.error("email or password invalid!");
+        }else {
+          notificationService.error(result.response.data.errors);
+        }
       }
     },
   },

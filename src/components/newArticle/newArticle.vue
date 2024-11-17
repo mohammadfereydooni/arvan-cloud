@@ -1,138 +1,201 @@
 <template>
-  <div class="container mt-4">
+  <div class="container mt-5">
     <h2>New Article</h2>
-    <form @submit.prevent="handleSubmit" class="row">
-      <!-- Title -->
-      <div class="col-8 mb-3">
-        <label for="title" class="form-label text-start">Title</label>
-        <InputText
-            v-model="title"
+    <form @submit.prevent="submitForm">
+      <div class="mb-3">
+        <label for="title" class="form-label">Title</label>
+        <input
+            type="text"
             id="title"
-            placeholder="Title"
-            class="w-100"
-            :class="{ 'p-invalid': titleError }"
-            required
+            v-model="formData.title"
+            class="form-control"
+            :class="{ 'is-invalid': errors.title }"
         />
-        <small v-if="titleError" class="p-error">Required field</small>
-      </div>
-
-      <!-- Tags -->
-      <div class="col-4 mb-3">
-        <label for="newTag" class="form-label">Tags</label>
-        <div class="card flex justify-content-center">
-          <div class="flex flex-column gap-3">
-            <div v-for="tag in tags" :key="tag.name" class="flex align-items-center">
-              <Checkbox v-model="selectedTags" :inputId="tag.name" name="tag" :value="tag.name" />
-              <label :for="tag.name">{{ tag.name }}</label>
-            </div>
-          </div>
+        <div v-if="errors.title" class="invalid-feedback">
+          {{ errors.title }}
         </div>
       </div>
 
-      <!-- Description -->
-      <div class="col-8 mb-3">
+      <div class="mb-3">
         <label for="description" class="form-label">Description</label>
-        <InputText v-model="description" id="description" placeholder="Description" class="w-100" />
+        <textarea
+            id="description"
+            v-model="formData.description"
+            class="form-control"
+            :class="{ 'is-invalid': errors.description }"
+        ></textarea>
+
+        <div v-if="errors.description" class="invalid-feedback">
+          {{ errors.description }}
+        </div>
       </div>
 
-      <!-- Body -->
-      <div class="col-8 mb-3">
+      <div class="mb-3">
         <label for="body" class="form-label">Body</label>
-        <Textarea v-model="body" id="body" rows="5" class="w-100" placeholder="Body"></Textarea>
+        <textarea
+            id="body"
+            v-model="formData.body"
+            class="form-control"
+            :class="{ 'is-invalid': errors.body }"
+        ></textarea>
+        <div v-if="errors.body" class="invalid-feedback">
+          {{ errors.body }}
+        </div>
       </div>
 
-      <!-- Submit Button -->
-      <div class="col-8 mt-3">
-        <Button type="submit" label="Submit" class="w-100" />
+      <div class="mb-3">
+        <label for="tags" class="form-label">Tags</label>
+        <div>
+          <div v-for="tag in tags" :key="tag" class="form-check">
+            <input
+                class="form-check-input"
+                type="checkbox"
+                :id="tag"
+                :value="tag"
+                v-model="formData.tagList"
+            />
+            <label class="form-check-label" :for="tag">{{ tag }}</label>
+          </div>
+          <input
+              type="text"
+              class="form-control mt-2"
+              placeholder="New tag"
+              v-model="newTag"
+          />
+          <button type="button" class="btn btn-secondary mt-2" @click="addTag">
+            Add Tag
+          </button>
+        </div>
       </div>
+
+      <button
+          type="submit"
+          class="btn btn-primary"
+          :disabled="isSubmitting"
+      >
+        {{ isSubmitting ? "Submitting..." : "Submit" }}
+      </button>
     </form>
   </div>
 </template>
 
 <script>
-import { ref, onMounted } from 'vue';
-import InputText from 'primevue/inputtext';
-import Textarea from 'primevue/textarea';
-import Button from 'primevue/button';
-import Checkbox from 'primevue/checkbox';
-import { getTags, addArticle } from '@/services/apiService';
+import {addArticle, getArticleBySlug, getTags, updateArticle} from "@/services/apiService";
+import notificationService from "@/services/notificationService";
 
 export default {
-  components: {
-    InputText,
-    Textarea,
-    Button,
-    Checkbox,
-  },
-  setup() {
-    const title = ref('');
-    const titleError = ref(false);
-    const description = ref('');
-    const body = ref('');
-    const newTag = ref('');
-    const tags = ref([]);
-    const selectedTags = ref([]);
-
-    // دریافت تگ‌ها از API
-    const getArticleTags = async () => {
-      try {
-        const response = await getTags();
-        tags.value = response.tags.map(tag => ({ name: tag }));
-      } catch (error) {
-        console.error("Error fetching tags:", error);
-      }
+  data() {
+    return {
+      formData: {
+        title: "",
+        description: "",
+        body: "",
+        tagList: [],
+      },
+      slug: "",
+      tags: [],
+      newTag: "",
+      isSubmitting: false,
+      errors: {},
     };
-
-    // هنگام ارسال فرم
-    const handleSubmit = async () => {
-      titleError.value = !title.value.trim();
-      if (!titleError.value) {
-        const payload = {
-          article: {
-            title: title.value,
-            description: description.value,
-            body: body.value,
-            tagList: selectedTags.value,
-          },
+  },
+  created() {
+    this.getTags();
+    if (this.$route.params.slug) {
+      this.fetchArticle(this.$route.params.slug);
+      this.slug = this.$route.params.slug;
+    }
+  },
+  methods: {
+    async fetchArticle(slug) {
+      try {
+        const response = await getArticleBySlug(slug);
+        this.formData = {
+          title: response.article.title || '',
+          description: response.article.description || '',
+          body: response.article.body || '',
+          tagList: response.article.tagList || [],
         };
+      } catch (error) {
+        notificationService.error(error);
+      }
+    },
+    addTag() {
+      if (this.newTag.trim() && !this.tags.includes(this.newTag)) {
+        this.tags.push(this.newTag);
+        this.formData.tagList.push(this.newTag);
+        this.newTag = "";
+      }
+    },
+    async submitForm() {
+      this.isSubmitting = true;
+      this.errors = {};
 
-        console.log(payload)
 
-        try {
-          const response = await addArticle(payload);
-          console.log('Article added successfully:', response);
-        } catch (error) {
-          console.error('Error submitting article:', error);
+      const payload = {
+        article: {
+          title: this.formData.title,
+          description: this.formData.description,
+          body: this.formData.body,
+          tagList: this.formData.tagList,
+        },
+      };
+
+      try {
+
+        if (this.$route.params.slug) {
+          const response = await updateArticle(this.$route.params.slug, payload);
+          if (response.error && response.error.data && response.error.data.errors) {
+            const serverErrors = response.error.data.errors;
+            for (const key in serverErrors) {
+              this.errors[key] = serverErrors[key][0];
+            }
+          }else if(response.article){
+            notificationService.success("Article added successfully!");
+          }
+
+        } else {
+          await addArticle(payload);
+          notificationService.success("Article added successfully!");
+        }
+
+
+        this.formData = {
+          title: "",
+          description: "",
+          body: "",
+          tagList: [],
+        };
+      } catch (error) {
+
+        if (error.response && error.response.data && error.response.data.errors) {
+          const serverErrors = error.response.data.errors;
+          for (const key in serverErrors) {
+            this.errors[key] = serverErrors[key][0];
+          }
+        } else {
+          notificationService.error("Something went wrong!");
         }
       }
-    };
 
-    // وقتی کامپوننت ساخته شد تگ‌ها را دریافت کن
-    onMounted(() => {
-      getArticleTags();
-    });
+      this.isSubmitting = false;
+    },
 
-    return {
-      title,
-      titleError,
-      description,
-      body,
-      newTag,
-      tags,
-      selectedTags,
-      handleSubmit,
-    };
+
+    async getTags(){
+      try {
+        const response = await getTags();
+        this.tags = response.tags.map(tag => (tag));
+      } catch (error) {
+        notificationService.error("Something went wrong!");
+      }
+    }
   },
 };
 </script>
 
-<style scoped>
-.p-invalid {
-  border-color: #dc3545;
-}
-
-.p-error {
-  color: #dc3545;
-  font-size: 0.875rem;
+<style>
+.container {
+  max-width: 600px;
 }
 </style>

@@ -31,6 +31,12 @@ const routes = [
                 path: 'newArticle',
                 name: 'newArticle',
                 component: newArticle
+            },
+            {
+                path: '/articles/edit/:slug',
+                name: 'edit-article',
+                component: ()=> import('@/components/newArticle/newArticle.vue'),
+                props: true,
             }
         ]
     }
