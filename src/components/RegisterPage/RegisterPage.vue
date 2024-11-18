@@ -98,6 +98,7 @@ export default {
 
         const token = result.user.token;
         localStorage.setItem('authToken', token);
+        localStorage.setItem('username', result.user.username);
 
 
         this.$router.push('/home');

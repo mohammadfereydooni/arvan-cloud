@@ -1,6 +1,7 @@
 <template>
   <div class="container mt-5">
-    <h2>New Article</h2>
+    <h2 v-if="this.slug">Edit Article</h2>
+    <h2 v-else>New Article</h2>
     <form @submit.prevent="submitForm">
       <div class="mb-3">
         <label for="title" class="form-label">Title</label>
@@ -104,6 +105,8 @@ export default {
     if (this.$route.params.slug) {
       this.fetchArticle(this.$route.params.slug);
       this.slug = this.$route.params.slug;
+    }else {
+      this.slug = null
     }
   },
   methods: {

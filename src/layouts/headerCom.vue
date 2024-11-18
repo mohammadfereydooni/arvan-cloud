@@ -22,6 +22,7 @@ export default{
   methods: {
     logOut() {
       localStorage.removeItem('authToken');
+      localStorage.removeItem('username');
       this.$router.push('/');
     }
   }
