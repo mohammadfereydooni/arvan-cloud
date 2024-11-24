@@ -81,7 +81,7 @@ export default {
     async handleRegister() {
       this.v$.$touch();
       if (this.v$.$invalid) {
-        console.log("فرم دارای خطاست");
+        notificationService.error('loftan form ra ba deghat por konid');
         return;
       }
 
